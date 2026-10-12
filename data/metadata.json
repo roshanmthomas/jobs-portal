@@ -1,16 +1,25 @@
 {
-  "generatedAt": "2026-10-12T08:24:51+00:00",
-  "totalLiveListings": 1448,
+  "generatedAt": "2026-10-12T09:02:27+00:00",
+  "totalListings": 1695,
+  "totalLiveListings": 1695,
   "retainedPreviousDataAfterFeedErrors": false,
-  "successfulBoards": {
+  "successfulSources": {
     "greenhouse": 9,
     "lever": 0,
-    "ashby": 7
+    "ashby": 7,
+    "remoteok": 1,
+    "jobicy": 1,
+    "himalayas": 1,
+    "weworkremotely": 1
   },
-  "configuredBoards": {
+  "configuredSources": {
     "greenhouse": 18,
     "lever": 12,
-    "ashby": 12
+    "ashby": 12,
+    "remoteok": 1,
+    "jobicy": 1,
+    "himalayas": 1,
+    "weworkremotely": 1
   },
   "boardsWithErrors": [
     {
@@ -170,29 +179,11 @@
       "error": "HTTP Error 404: Not Found"
     }
   ],
-  "note": "Only published public listings matching the configured IoT/industrial/connected-device keywords are included. A missing result does not prove that a company has no relevant jobs. Eligibility and work model are shown only when supported by listing text.",
-  "integrationsUpdatedAt": "2026-10-12",
-  "configuredSourceTypes": [
-    "Greenhouse public boards",
-    "Lever public postings",
-    "Ashby public boards",
-    "Remote OK public JSON",
-    "Jobicy public API (cursor pagination)",
-    "Himalayas public API (cursor pagination)",
-    "We Work Remotely official RSS"
-  ],
-  "searchLinkSources": [
-    "LinkedIn Jobs",
-    "Indeed",
-    "Arc",
-    "Cutshort",
-    "Wellfound",
-    "Naukri",
-    "Dice",
-    "Glassdoor",
-    "Remote.co",
-    "Foundit"
-  ],
-  "refreshRequiredForNewFeeds": true,
-  "integrationNote": "New public-feed adapters are configured in scripts/update_jobs.py. This metadata still reflects the last completed dataset refresh; run the refresh script or GitHub Actions workflow to fetch the new sources."
+  "note": "Listings are filtered for configured IoT/industrial/connected-device keywords and deduplicated. Search-link integrations are provided for sources without an authorized public feed. Always verify source listing, country eligibility and work authorization before applying.",
+  "attribution": {
+    "jobicy": "https://jobicy.com",
+    "himalayas": "https://himalayas.app",
+    "weworkremotely": "https://weworkremotely.com",
+    "remoteok": "https://remoteok.com"
+  }
 }
