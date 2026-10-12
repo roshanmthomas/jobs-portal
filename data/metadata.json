@@ -170,5 +170,29 @@
       "error": "HTTP Error 404: Not Found"
     }
   ],
-  "note": "Only published public listings matching the configured IoT/industrial/connected-device keywords are included. A missing result does not prove that a company has no relevant jobs. Eligibility and work model are shown only when supported by listing text."
+  "note": "Only published public listings matching the configured IoT/industrial/connected-device keywords are included. A missing result does not prove that a company has no relevant jobs. Eligibility and work model are shown only when supported by listing text.",
+  "integrationsUpdatedAt": "2026-10-12",
+  "configuredSourceTypes": [
+    "Greenhouse public boards",
+    "Lever public postings",
+    "Ashby public boards",
+    "Remote OK public JSON",
+    "Jobicy public API (cursor pagination)",
+    "Himalayas public API (cursor pagination)",
+    "We Work Remotely official RSS"
+  ],
+  "searchLinkSources": [
+    "LinkedIn Jobs",
+    "Indeed",
+    "Arc",
+    "Cutshort",
+    "Wellfound",
+    "Naukri",
+    "Dice",
+    "Glassdoor",
+    "Remote.co",
+    "Foundit"
+  ],
+  "refreshRequiredForNewFeeds": true,
+  "integrationNote": "New public-feed adapters are configured in scripts/update_jobs.py. This metadata still reflects the last completed dataset refresh; run the refresh script or GitHub Actions workflow to fetch the new sources."
 }

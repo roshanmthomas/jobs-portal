@@ -7,6 +7,7 @@ import html
 import json
 import re
 import time
+import xml.etree.ElementTree as ET
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -15,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
-HEADERS = {"User-Agent": "Global-IoT-Career-Radar/1.0 (+public job-board aggregator)", "Accept": "application/json"}
+HEADERS = {"User-Agent": "Global-IoT-Career-Radar/1.1 (public job discovery; source attribution preserved)", "Accept": "application/json, application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8"}
 
 REGION_CENTERS = {
     "India": (22.5, 79.0, "Asia"), "United States": (39.5, -98.35, "North America"),
@@ -43,10 +44,14 @@ COUNTRY_ALIASES = [
 ]
 
 
-def get_json(url: str):
+def get_text(url: str) -> str:
     req = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(req, timeout=20) as resp:
-        return json.loads(resp.read().decode("utf-8", "replace"))
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        return resp.read().decode("utf-8", "replace")
+
+
+def get_json(url: str):
+    return json.loads(get_text(url))
 
 
 def clean_text(value) -> str:
@@ -168,7 +173,7 @@ def salary_from_text(text: str) -> str:
     return "Not disclosed in public feed"
 
 
-def normalize(company: str, title: str, location: str, url: str, description: str, source: str, source_id: str, keywords: list[str]):
+def normalize(company: str, title: str, location: str, url: str, description: str, source: str, source_id: str, keywords: list[str], source_url: str | None = None):
     combined = f"{title} {description}"
     low = combined.lower()
     if not any(k.lower() in low for k in keywords):
@@ -192,10 +197,10 @@ def normalize(company: str, title: str, location: str, url: str, description: st
         "continent": continent, "lat": lat, "lon": lon, "workModel": remote,
         "roleFamily": role_family(title, description), "seniority": seniority(title),
         "salary": salary_from_text(combined), "eligibility": eligibility,
-        "status": "Live public ATS listing — recheck before applying", "applyUrl": url,
+        "status": "Live public listing — recheck before applying", "applyUrl": url, "sourceUrl": source_url or url,
         "skills": skills_for(combined, keywords), "fit": score(title, description, remote, location),
         "note": description_short or f"Published listing retrieved from the {source.title()} public job feed.",
-        "source": source.title(), "sourceType": "live_api", "sourceId": str(source_id),
+        "source": source.title(), "sourceType": "public_feed" if source in ("remoteok", "jobicy", "himalayas", "weworkremotely") else "live_api", "sourceId": str(source_id),
         "lastSeenAt": datetime.now(timezone.utc).isoformat(timespec="seconds")
     }
 
@@ -234,29 +239,185 @@ def ashby(cfg, keywords):
         yield job
 
 
+
+def remote_location(value) -> str:
+    if isinstance(value, list):
+        return ", ".join(clean_text(v) for v in value if clean_text(v))
+    if isinstance(value, dict):
+        return get_loc_text(value)
+    return clean_text(value)
+
+
+def remote_ok(cfg, keywords):
+    """Remote OK public JSON feed; preserve the original Remote OK listing URL."""
+    url = cfg.get("url", "https://remoteok.com/api")
+    data = get_json(url)
+    if not isinstance(data, list):
+        raise ValueError("Remote OK response was not a JSON list")
+    for item in data:
+        if not isinstance(item, dict) or not item.get("position"):
+            continue  # the feed may begin with a metadata/notice object
+        title = clean_text(item.get("position"))
+        company = clean_text(item.get("company") or "Remote OK employer")
+        location = clean_text(item.get("location") or item.get("candidate_required_location") or "Remote / location not specified")
+        desc = clean_text(item.get("description") or "")
+        listing_url = item.get("url") or item.get("apply_url") or ""
+        yield normalize(company, title, location, listing_url, desc, "remoteok", item.get("id") or listing_url, keywords, listing_url)
+
+
+def jobicy(cfg, keywords):
+    """Jobicy public API, with bounded cursor pagination and source attribution."""
+    base = cfg.get("url", "https://jobicy.com/api/v2/remote-jobs")
+    max_pages = max(1, min(int(cfg.get("max_pages", 3)), 10))
+    params = {"count": min(200, max(1, int(cfg.get("page_size", 200))))}
+    cursor = None
+    for _ in range(max_pages):
+        query = dict(params)
+        if cursor:
+            query["cursor"] = cursor
+        url = base + "?" + urllib.parse.urlencode(query)
+        data = get_json(url)
+        if not isinstance(data, dict) or data.get("success") is False:
+            raise ValueError("Jobicy returned an invalid or unsuccessful response")
+        for item in data.get("jobs", []):
+            if not isinstance(item, dict):
+                continue
+            title = clean_text(item.get("jobTitle"))
+            company = clean_text(item.get("companyName") or "Jobicy employer")
+            location = clean_text(item.get("jobGeo") or "Remote / location not specified")
+            desc = clean_text(item.get("jobDescription") or item.get("jobExcerpt") or "")
+            listing_url = item.get("url") or ""
+            salary = ""
+            lo, hi, currency = item.get("salaryMin"), item.get("salaryMax"), item.get("salaryCurrency")
+            period = clean_text(item.get("salaryPeriod") or "yearly")
+            if lo is not None or hi is not None:
+                salary = f"{currency or ''} {lo if lo is not None else '?'}–{hi if hi is not None else '?'} ({period})".strip()
+            job = normalize(company, title, location, listing_url, desc, "jobicy", item.get("id") or listing_url, keywords, listing_url)
+            if job:
+                if salary:
+                    job["salary"] = salary[:160]
+                job["publishedAt"] = clean_text(item.get("pubDate"))
+                yield job
+        cursor = data.get("nextCursor")
+        if not cursor:
+            break
+        time.sleep(0.35)
+
+
+def himalayas(cfg, keywords):
+    """Himalayas public remote jobs API; preserve attribution and source listing links."""
+    base = cfg.get("url", "https://himalayas.app/jobs/api")
+    max_pages = max(1, min(int(cfg.get("max_pages", 10)), 20))
+    cursor = None
+    for _ in range(max_pages):
+        params = {"limit": min(20, max(1, int(cfg.get("page_size", 20))))}
+        if cursor:
+            params["cursor"] = cursor
+        data = get_json(base + "?" + urllib.parse.urlencode(params))
+        if not isinstance(data, dict):
+            raise ValueError("Himalayas response was not a JSON object")
+        for item in data.get("jobs", []):
+            if not isinstance(item, dict):
+                continue
+            title = clean_text(item.get("title"))
+            company = clean_text(item.get("companyName") or "Himalayas employer")
+            restrictions = item.get("locationRestrictions") or []
+            if isinstance(restrictions, list):
+                location = ", ".join(clean_text(x) for x in restrictions if clean_text(x))
+            else:
+                location = clean_text(restrictions)
+            if not location:
+                location = "Remote / location not specified"
+            desc = clean_text(item.get("description") or item.get("excerpt") or "")
+            apply_url = item.get("applicationLink") or ""
+            # The public schema's guid may be a canonical source URL. If not, link to Himalayas' job index.
+            guid = clean_text(item.get("guid") or "")
+            source_url = guid if guid.startswith(("https://", "http://")) else "https://himalayas.app/jobs"
+            job = normalize(company, title, location, apply_url or source_url, desc, "himalayas", item.get("guid") or item.get("id") or apply_url or title, keywords, source_url)
+            if job:
+                salary_min, salary_max = item.get("minSalary"), item.get("maxSalary")
+                currency = clean_text(item.get("currency") or "")
+                period = clean_text(item.get("salaryPeriod") or "annual")
+                if salary_min is not None or salary_max is not None:
+                    job["salary"] = f"{currency} {salary_min if salary_min is not None else '?'}–{salary_max if salary_max is not None else '?'} ({period})".strip()[:160]
+                job["employmentType"] = clean_text(item.get("employmentType") or "")
+                job["publishedAt"] = clean_text(item.get("pubDate") or "")
+                yield job
+        cursor = data.get("nextCursor")
+        if not cursor:
+            break
+        time.sleep(0.35)
+
+
+def we_work_remotely(cfg, keywords):
+    """Official public RSS feed. WWR asks consumers to attribute links back to WWR."""
+    url = cfg.get("url", "https://weworkremotely.com/remote-jobs.rss")
+    root = ET.fromstring(get_text(url))
+    for item in root.findall(".//item"):
+        title_line = clean_text(item.findtext("title") or "")
+        link = clean_text(item.findtext("link") or "")
+        description = clean_text(item.findtext("description") or "")
+        category = " ".join(clean_text(x.text or "") for x in item.findall("category"))
+        # WWR item titles are commonly "Company: Role"; split only once.
+        if ":" in title_line:
+            company, title = [clean_text(x) for x in title_line.split(":", 1)]
+        else:
+            company, title = "We Work Remotely employer", title_line
+        location = "Remote / location not specified"
+        text_blob = " ".join((description, category, title_line))
+        job = normalize(company, title, location, link, text_blob, "weworkremotely", link, keywords, link)
+        if job:
+            job["publishedAt"] = clean_text(item.findtext("pubDate") or "")
+            yield job
+
 def main():
     cfg = json.loads((DATA / "sources.json").read_text(encoding="utf-8"))
     keywords = cfg.get("keywords", [])
-    jobs, errors, successes = {}, [], {"greenhouse": 0, "lever": 0, "ashby": 0}
-    for source_name, fetcher in (("greenhouse", greenhouse), ("lever", lever), ("ashby", ashby)):
-        for source_cfg in cfg.get(source_name, []):
+    jobs, errors = {}, []
+    successes = {k: 0 for k in ("greenhouse", "lever", "ashby", "remoteok", "jobicy", "himalayas", "weworkremotely")}
+    configured = {}
+    fetchers = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby}
+    for source_name, fetcher in fetchers.items():
+        source_cfgs = cfg.get(source_name, [])
+        configured[source_name] = len(source_cfgs)
+        for source_cfg in source_cfgs:
             try:
-                count = 0
+                found = 0
                 for job in fetcher(source_cfg, keywords):
                     if job:
-                        # Preserve the first matching posting if it appears in multiple ATS boards.
                         key = (job["company"].lower(), re.sub(r"\W+", " ", job["title"].lower()).strip(), job["applyUrl"].rstrip("/").lower())
                         jobs[key] = job
-                        count += 1
+                        found += 1
                 successes[source_name] += 1
-            except (urllib.error.URLError, TimeoutError, ValueError, KeyError, TypeError) as exc:
-                errors.append({"source": source_name, "company": source_cfg.get("company"), "board": source_cfg.get("board") or source_cfg.get("site"), "error": str(exc)[:180]})
             except Exception as exc:
                 errors.append({"source": source_name, "company": source_cfg.get("company"), "board": source_cfg.get("board") or source_cfg.get("site"), "error": str(exc)[:180]})
             time.sleep(0.15)
-    output = sorted(jobs.values(), key=lambda j: (-int(j["fit"]), j["company"].lower(), j["title"].lower()))
-    # Do not silently replace a useful prior feed with an empty result if all endpoints failed.
+
+    for source_name, fetcher in (("remoteok", remote_ok), ("jobicy", jobicy), ("himalayas", himalayas), ("weworkremotely", we_work_remotely)):
+        source_cfg = cfg.get(source_name)
+        configured[source_name] = 1 if source_cfg else 0
+        if not source_cfg:
+            continue
+        try:
+            for job in fetcher(source_cfg, keywords):
+                if job:
+                    key = (job["company"].lower(), re.sub(r"\W+", " ", job["title"].lower()).strip(), job["applyUrl"].rstrip("/").lower())
+                    # Prefer the canonical listing URL and preserve multiple source labels for duplicates.
+                    existing = jobs.get(key)
+                    if existing:
+                        existing_sources = set(existing.get("sourceNames", [existing.get("source", "")]))
+                        existing_sources.add(job.get("source", ""))
+                        existing["sourceNames"] = sorted(x for x in existing_sources if x)
+                        continue
+                    jobs[key] = job
+            successes[source_name] += 1
+        except Exception as exc:
+            errors.append({"source": source_name, "company": source_cfg.get("company"), "board": source_cfg.get("url", source_name), "error": str(exc)[:180]})
+        time.sleep(0.25)
+
+    output = sorted(jobs.values(), key=lambda j: (-int(j.get("fit", 0)), -int(bool(j.get("publishedAt"))), j["company"].lower(), j["title"].lower()))
     retained_previous_data = False
+    # Keep the existing dataset if all sources fail or no source returned a single relevant result.
     if not output and errors:
         old = DATA / "jobs.json"
         if old.exists():
@@ -270,13 +431,17 @@ def main():
     (DATA / "jobs.json").write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     meta = {
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "totalLiveListings": sum(1 for j in output if j.get("sourceType") == "live_api"), "retainedPreviousDataAfterFeedErrors": retained_previous_data, "successfulBoards": successes,
-        "configuredBoards": {k: len(cfg.get(k, [])) for k in ("greenhouse", "lever", "ashby")},
+        "totalListings": len(output),
+        "totalLiveListings": sum(1 for j in output if j.get("sourceType") == "live_api" or j.get("sourceType") == "public_feed"),
+        "retainedPreviousDataAfterFeedErrors": retained_previous_data,
+        "successfulSources": successes,
+        "configuredSources": configured,
         "boardsWithErrors": errors,
-        "note": "Only published public listings matching the configured IoT/industrial/connected-device keywords are included. A missing result does not prove that a company has no relevant jobs. Eligibility and work model are shown only when supported by listing text."
+        "note": "Listings are filtered for configured IoT/industrial/connected-device keywords and deduplicated. Search-link integrations are provided for sources without an authorized public feed. Always verify source listing, country eligibility and work authorization before applying.",
+        "attribution": {"jobicy": "https://jobicy.com", "himalayas": "https://himalayas.app", "weworkremotely": "https://weworkremotely.com", "remoteok": "https://remoteok.com"}
     }
     (DATA / "metadata.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {len(output)} matching jobs ({sum(1 for j in output if j.get('sourceType') == 'live_api')} live API listings); board success counts: {successes}; errors: {len(errors)}")
+    print(f"Wrote {len(output)} matching jobs ({meta['totalLiveListings']} live/public-feed listings); successful sources: {successes}; errors: {len(errors)}")
 
 if __name__ == "__main__":
     main()
