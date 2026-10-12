@@ -1,8 +1,174 @@
 {
-  "generatedAt": null,
-  "totalLiveListings": 0,
-  "successfulBoards": {"greenhouse": 0, "lever": 0, "ashby": 0},
-  "configuredBoards": {"greenhouse": 18, "lever": 12, "ashby": 12},
-  "boardsWithErrors": [],
-  "note": "Initial package includes curated research leads. Run the GitHub Actions Refresh global IoT job feeds workflow after publishing to retrieve current public ATS listings."
+  "generatedAt": "2026-10-12T08:24:51+00:00",
+  "totalLiveListings": 1448,
+  "retainedPreviousDataAfterFeedErrors": false,
+  "successfulBoards": {
+    "greenhouse": 9,
+    "lever": 0,
+    "ashby": 7
+  },
+  "configuredBoards": {
+    "greenhouse": 18,
+    "lever": 12,
+    "ashby": 12
+  },
+  "boardsWithErrors": [
+    {
+      "source": "greenhouse",
+      "company": "Skydio",
+      "board": "skydio",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "greenhouse",
+      "company": "Aurora Innovation",
+      "board": "aurorainnovation",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "greenhouse",
+      "company": "Formant",
+      "board": "formant",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "greenhouse",
+      "company": "Roboflow",
+      "board": "roboflow",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "greenhouse",
+      "company": "Shield AI",
+      "board": "shieldai",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "greenhouse",
+      "company": "Zipline",
+      "board": "zipline",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "greenhouse",
+      "company": "Snowflake",
+      "board": "snowflake",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "greenhouse",
+      "company": "CloudBees",
+      "board": "cloudbees",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "greenhouse",
+      "company": "C3 AI",
+      "board": "c3ai",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "lever",
+      "company": "Planet",
+      "board": "planet",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "lever",
+      "company": "Gecko Robotics",
+      "board": "geckorobotics",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "lever",
+      "company": "Formlabs",
+      "board": "formlabs",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "lever",
+      "company": "Scale AI",
+      "board": "scaleai",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "lever",
+      "company": "Cohesity",
+      "board": "cohesity",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "lever",
+      "company": "Aurora Solar",
+      "board": "aurorasolar",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "lever",
+      "company": "Verkada",
+      "board": "verkada",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "lever",
+      "company": "Samsara",
+      "board": "samsara",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "lever",
+      "company": "Impinj",
+      "board": "impinj",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "lever",
+      "company": "Nuro",
+      "board": "nuro",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "lever",
+      "company": "Ouster",
+      "board": "ouster",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "lever",
+      "company": "Procore",
+      "board": "procore",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "ashby",
+      "company": "Anduril Industries",
+      "board": "anduril",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "ashby",
+      "company": "Zipline",
+      "board": "zipline",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "ashby",
+      "company": "Runway",
+      "board": "runwayml",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "ashby",
+      "company": "Applied Intuition",
+      "board": "appliedintuition",
+      "error": "HTTP Error 404: Not Found"
+    },
+    {
+      "source": "ashby",
+      "company": "Shield AI",
+      "board": "shieldai",
+      "error": "HTTP Error 404: Not Found"
+    }
+  ],
+  "note": "Only published public listings matching the configured IoT/industrial/connected-device keywords are included. A missing result does not prove that a company has no relevant jobs. Eligibility and work model are shown only when supported by listing text."
 }
