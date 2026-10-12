@@ -1,0 +1,52 @@
+{
+  "greenhouse": [
+    {"company":"Canonical","board":"canonical"},
+    {"company":"Samsara","board":"samsara"},
+    {"company":"Anduril Industries","board":"andurilindustries"},
+    {"company":"Skydio","board":"skydio"},
+    {"company":"Aurora Innovation","board":"aurorainnovation"},
+    {"company":"Cloudflare","board":"cloudflare"},
+    {"company":"Datadog","board":"datadog"},
+    {"company":"Stripe","board":"stripe"},
+    {"company":"Formant","board":"formant"},
+    {"company":"Roboflow","board":"roboflow"},
+    {"company":"Shield AI","board":"shieldai"},
+    {"company":"Zipline","board":"zipline"},
+    {"company":"Axonius","board":"axonius"},
+    {"company":"Dragos","board":"dragos"},
+    {"company":"Snowflake","board":"snowflake"},
+    {"company":"Elastic","board":"elastic"},
+    {"company":"CloudBees","board":"cloudbees"},
+    {"company":"C3 AI","board":"c3ai"}
+  ],
+  "lever": [
+    {"company":"Planet","site":"planet"},
+    {"company":"Gecko Robotics","site":"geckorobotics"},
+    {"company":"Formlabs","site":"formlabs"},
+    {"company":"Scale AI","site":"scaleai"},
+    {"company":"Cohesity","site":"cohesity"},
+    {"company":"Aurora Solar","site":"aurorasolar"},
+    {"company":"Verkada","site":"verkada"},
+    {"company":"Samsara","site":"samsara"},
+    {"company":"Impinj","site":"impinj"},
+    {"company":"Nuro","site":"nuro"},
+    {"company":"Ouster","site":"ouster"},
+    {"company":"Procore","site":"procore"}
+  ],
+  "ashby": [
+    {"company":"Figure AI","board":"figure"},
+    {"company":"Skydio","board":"skydio"},
+    {"company":"Anduril Industries","board":"anduril"},
+    {"company":"Zipline","board":"zipline"},
+    {"company":"Vanta","board":"vanta"},
+    {"company":"PostHog","board":"posthog"},
+    {"company":"ClickHouse","board":"clickhouse"},
+    {"company":"Runway","board":"runwayml"},
+    {"company":"Sierra","board":"sierra"},
+    {"company":"Physical Intelligence","board":"physicalintelligence"},
+    {"company":"Applied Intuition","board":"appliedintuition"},
+    {"company":"Shield AI","board":"shieldai"}
+  ],
+  "max_per_source": 500,
+  "keywords": ["iot", "internet of things", "iiot", "mqtt", "lorawan", "industrial automation", "industrial connectivity", "scada", "opc ua", "sparkplug b", "telemetry", "telematics", "device connectivity", "iot platform", "edge computing", "embedded systems", "firmware", "industrial iot", "operational technology", "ot security", "connected devices", "charging infrastructure", "ev charging", "field applications engineer", "solutions engineer"]
+}

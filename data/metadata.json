@@ -1,0 +1,8 @@
+{
+  "generatedAt": null,
+  "totalLiveListings": 0,
+  "successfulBoards": {"greenhouse": 0, "lever": 0, "ashby": 0},
+  "configuredBoards": {"greenhouse": 18, "lever": 12, "ashby": 12},
+  "boardsWithErrors": [],
+  "note": "Initial package includes curated research leads. Run the GitHub Actions Refresh global IoT job feeds workflow after publishing to retrieve current public ATS listings."
+}

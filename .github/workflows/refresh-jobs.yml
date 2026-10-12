@@ -1,0 +1,40 @@
+name: Refresh global IoT job feeds
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+  push:
+    paths:
+      - 'scripts/update_jobs.py'
+      - 'data/sources.json'
+      - '.github/workflows/refresh-jobs.yml'
+    branches: [main]
+permissions:
+  contents: write
+concurrency:
+  group: refresh-global-iot-jobs
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Refresh public job boards
+        run: python scripts/update_jobs.py
+      - name: Commit refreshed feed
+        run: |
+          if [[ -n "$(git status --porcelain data/jobs.json data/metadata.json)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/jobs.json data/metadata.json
+            git commit -m "chore: refresh public IoT job feeds"
+            git push
+          else
+            echo "No feed changes to commit."
+          fi
