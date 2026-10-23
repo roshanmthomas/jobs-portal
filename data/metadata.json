@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-10-23T17:09:35+00:00",
-  "totalListings": 1726,
-  "totalLiveListings": 1726,
+  "generatedAt": "2026-10-23T21:25:34+00:00",
+  "totalListings": 1915,
+  "totalLiveListings": 1915,
   "retainedPreviousDataAfterFeedErrors": false,
   "successfulSources": {
     "greenhouse": 9,
     "lever": 0,
-    "ashby": 7,
+    "ashby": 8,
     "remoteok": 1,
     "jobicy": 1,
     "himalayas": 1,
@@ -170,12 +170,6 @@
       "source": "ashby",
       "company": "Applied Intuition",
       "board": "appliedintuition",
-      "error": "HTTP Error 404: Not Found"
-    },
-    {
-      "source": "ashby",
-      "company": "Shield AI",
-      "board": "shieldai",
       "error": "HTTP Error 404: Not Found"
     }
   ],
